@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: labdrools
+  ai:
+    openai:
+      api-key: sk-proj-simulado123456789
+      chat:
+        options:
+          model: gpt-4o-mini

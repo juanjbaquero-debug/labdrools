@@ -1,0 +1,101 @@
+package rules
+
+import com.udea.labdrools.model.Passenger
+import com.udea.labdrools.model.Flight
+import com.udea.labdrools.model.AirlineResponse
+
+// 1. UpgradeToBusinessClassForFrequentFlyersWithDelays
+rule "UpgradeToBusinessClassForFrequentFlyersWithDelays"
+when
+    $p: Passenger(membershipStatus == "Gold" || membershipStatus == "Platinum")
+    $f: Flight(delayMinutes > 60)
+    $r: AirlineResponse(eligibleForUpgrade == true) // Depende de que el equipaje no lo bloquee
+then
+    $r.setUpgradedToBusiness(true);
+    $r.setMessage("Ascenso a clase ejecutiva otorgado.");
+end
+
+// 2. PriorityCheckInForSeniors
+rule "PriorityCheckInForSeniors"
+when
+    $p: Passenger(age > 65)
+    $r: AirlineResponse()
+then
+    $r.setPriorityCheckIn(true);
+end
+
+// 3. DiscountForLightLuggage
+rule "DiscountForLightLuggage"
+when
+    $p: Passenger(luggageWeight < 10)
+    $r: AirlineResponse()
+then
+    $r.setDiscountPercentage(10.0);
+end
+
+// 4. DenyUpgradeForOverweightLuggage
+rule "DenyUpgradeForOverweightLuggage"
+when
+    $p: Passenger(luggageWeight > 23)
+    $r: AirlineResponse()
+then
+    $r.setEligibleForUpgrade(false);
+end
+
+// 5. AssignEmergencyExitSeatToYoungAdults
+rule "AssignEmergencyExitSeatToYoungAdults"
+when
+    $p: Passenger(age >= 18, age <= 40, seatPreference == "Any")
+    $f: Flight(emergencySeatAvailable == true)
+    $r: AirlineResponse()
+then
+    $r.setAssignedSeat("Salida de Emergencia");
+    $f.setEmergencySeatAvailable(false);
+end
+
+// 6. CompensationForExtremeDelays
+rule "CompensationForExtremeDelays"
+when
+    $f: Flight(delayMinutes > 180)
+    $r: AirlineResponse()
+then
+    $r.setCompensationAmount(200.0);
+end
+
+// 7. ExtraLoyaltyPointsForLongFlights
+rule "ExtraLoyaltyPointsForLongFlights"
+when
+    $p: Passenger(membershipStatus != "Basic")
+    $f: Flight(durationHours > 5)
+    $r: AirlineResponse()
+then
+    $r.setLoyaltyPointsAdded(500);
+end
+
+// 8. RestrictLuggageOnShortFlights
+rule "RestrictLuggageOnShortFlights"
+when
+    $p: Passenger(luggageWeight > 15)
+    $f: Flight(durationHours < 2)
+    $r: AirlineResponse()
+then
+    $r.setLuggageAllowed(false);
+end
+
+// 9. VipLoungeAccessForPlatinumMembers
+rule "VipLoungeAccessForPlatinumMembers"
+when
+    $p: Passenger(membershipStatus == "Platinum")
+    $r: AirlineResponse()
+then
+    $r.setVipLoungeAccess(true);
+end
+
+// 10. PreferentialSeatForFamilies
+rule "PreferentialSeatForFamilies"
+when
+    $p: Passenger(travelingWithChildren == true, seatPreference == "Any")
+    $r: AirlineResponse()
+then
+    $r.setAssignedSeat("Asiento preferencial para familias");
+end
